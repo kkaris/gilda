@@ -6,6 +6,7 @@ import json
 import sys
 import logging
 import sqlite3
+import threading
 from gilda.term import Term
 from . import resource_dir
 
@@ -26,13 +27,14 @@ class SqliteEntries:
     """
     def __init__(self, db):
         self.db = db
-        self.conn = None
+        self._local = threading.local()
+        self._local.conn = None
 
     def get_connection(self):
-        if self.conn:
-            return self.conn
-        self.conn = sqlite3.connect(self.db)
-        return self.conn
+        if self._local.conn:
+            return self._local.conn
+        self._local.conn = sqlite3.connect(self.db)
+        return self._local.conn
 
     def get(self, key, default=None):
         res = self.get_connection().execute(
